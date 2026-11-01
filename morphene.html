@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Morphene</title>
+  <meta name="description" content="Turn a short text string and a passphrase into a 15-character password.">
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5e584f;
+      --line: #ddd4c6;
+      --paper: #f6f1e8;
+      --card: #fffdf8;
+      --green: #1e4a38;
+      --green-deep: #143328;
+      --clay: #b24a28;
+      --danger: #8c2f2f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #efe4d2 0%, transparent 55%),
+        var(--paper);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(40rem, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 3.5rem 0 4rem;
+    }
+
+    .kicker {
+      margin: 0 0 0.75rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, serif;
+      font-size: clamp(2.6rem, 7vw, 4rem);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+    }
+
+    .lede {
+      max-width: 36rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
+    }
+
+    form {
+      margin-top: 2rem;
+      padding: 1.35rem 1.35rem 1.2rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(60, 42, 20, 0.06);
+    }
+
+    label {
+      display: block;
+      margin: 0.95rem 0 0.4rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    label:first-of-type { margin-top: 0; }
+
+    .hint {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      margin: 0;
+      padding: 0.75rem 0.85rem;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid #cfc5b6;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      outline: 2px solid var(--green);
+      outline-offset: 1px;
+      border-color: var(--green);
+    }
+
+    .pass-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .pass-row input { flex: 1; }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+
+    #toggle {
+      padding: 0 0.9rem;
+      color: var(--green-deep);
+      background: #f3eee4;
+      border: 1px solid #cfc5b6;
+      border-radius: 10px;
+    }
+
+    #toggle:hover { background: #e9e1d2; }
+
+    #go {
+      display: block;
+      width: 100%;
+      margin-top: 1.15rem;
+      padding: 0.8rem 1rem;
+      color: #f7f3ea;
+      background: var(--green);
+      border: 0;
+      border-radius: 999px;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+    }
+
+    #go:hover { background: var(--green-deep); }
+
+    #go:disabled {
+      cursor: progress;
+      opacity: 0.7;
+    }
+
+    #status {
+      min-height: 1.4rem;
+      margin: 0.75rem 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    #status.error { color: var(--danger); }
+
+    #result {
+      margin-top: 1rem;
+    }
+
+    #result[hidden] { display: none; }
+
+    .result-label {
+      margin: 0 0 0.45rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .password {
+      margin: 0;
+      padding: 0.9rem 1rem;
+      background: #17241e;
+      border-radius: 12px;
+      color: #f4efe4;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: clamp(1.15rem, 3.4vw, 1.55rem);
+      letter-spacing: 0.08em;
+      word-break: break-all;
+    }
+
+    .password .sym { color: #f0a07a; }
+    .password .digit { color: #f2d48a; }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 1rem;
+      align-items: center;
+      margin-top: 0.75rem;
+    }
+
+    #copy {
+      padding: 0.45rem 0.9rem;
+      color: var(--green-deep);
+      background: #fff;
+      border: 1px solid #cfc5b6;
+      border-radius: 999px;
+    }
+
+    #copy:hover { background: #f3eee4; }
+
+    .checks {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer p { margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="kicker">Sklar Development</p>
+    <h1>Morphene</h1>
+    <p class="lede">Paste a short text string and a passphrase. Morphene turns that pair into the same 15-character password every time: mixed-case letters, at least one digit, and a hyphen, underscore, or percent sign.</p>
+
+    <form id="form" autocomplete="off">
+      <label for="text">Short text</label>
+      <input id="text" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+      <p class="hint">A site name, account label, or any short phrase. Spaces and punctuation count.</p>
+
+      <label for="pass">Passphrase</label>
+      <div class="pass-row">
+        <input id="pass" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+        <button id="toggle" type="button" aria-controls="pass" aria-pressed="false">Show</button>
+      </div>
+      <p class="hint">Kept only in this browser tab. Nothing is sent to the server.</p>
+
+      <button id="go" type="submit">Make password</button>
+      <p id="status" role="status"></p>
+
+      <section id="result" hidden aria-live="polite">
+        <p class="result-label">Password</p>
+        <p class="password" id="password"></p>
+        <div class="result-actions">
+          <button id="copy" type="button">Copy</button>
+          <p class="checks" id="checks"></p>
+        </div>
+      </section>
+    </form>
+
+    <footer>
+      <p>The same text and passphrase always produce the same password. Change either one and the password changes.</p>
+      <p>Fifteen characters. Uppercase and lowercase letters, at least one digit, and at least one of - _ %</p>
+    </footer>
+  </main>
+
+  <script>
+    const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_%";
+    const ACCEPT_BELOW = ALPHABET.length * Math.floor(256 / ALPHABET.length);
+
+    const form = document.getElementById("form");
+    const textInput = document.getElementById("text");
+    const passInput = document.getElementById("pass");
+    const toggle = document.getElementById("toggle");
+    const go = document.getElementById("go");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+    const passwordEl = document.getElementById("password");
+    const checks = document.getElementById("checks");
+    const copyBtn = document.getElementById("copy");
+
+    let currentPassword = "";
+
+    toggle.addEventListener("click", () => {
+      const showing = passInput.type === "text";
+      passInput.type = showing ? "password" : "text";
+      toggle.textContent = showing ? "Show" : "Hide";
+      toggle.setAttribute("aria-pressed", String(!showing));
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      if (!currentPassword) return;
+      try {
+        await navigator.clipboard.writeText(currentPassword);
+        copyBtn.textContent = "Copied";
+      } catch (err) {
+        copyBtn.textContent = "Select and copy";
+      }
+      setTimeout(() => { copyBtn.textContent = "Copy"; }, 1600);
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = textInput.value.normalize("NFC");
+      const passphrase = passInput.value.normalize("NFC");
+      if (!text || !passphrase) {
+        status.textContent = "Enter both a short text string and a passphrase.";
+        return;
+      }
+
+      go.disabled = true;
+      status.classList.remove("error");
+      status.textContent = "Making the password…";
+      result.hidden = true;
+      currentPassword = "";
+
+      try {
+        const password = await morphene(text, passphrase);
+        currentPassword = password;
+        renderPassword(password);
+        checks.textContent = describe(password);
+        result.hidden = false;
+        status.textContent = "";
+      } catch (err) {
+        status.classList.add("error");
+        status.textContent = "This browser could not derive a password. Try again.";
+      } finally {
+        go.disabled = false;
+      }
+    });
+
+    function renderPassword(password) {
+      passwordEl.replaceChildren();
+      for (const ch of password) {
+        const span = document.createElement("span");
+        span.textContent = ch;
+        if (ch === "-" || ch === "_" || ch === "%") span.className = "sym";
+        else if (ch >= "0" && ch <= "9") span.className = "digit";
+        passwordEl.appendChild(span);
+      }
+    }
+
+    function describe(password) {
+      const digits = (password.match(/[0-9]/g) || []).length;
+      const symbols = (password.match(/[-_%]/g) || []).length;
+      const digitWord = digits === 1 ? "1 digit" : digits + " digits";
+      const symbolWord = symbols === 1 ? "1 symbol" : symbols + " symbols";
+      return password.length + " characters · mixed case · " + digitWord + " · " + symbolWord;
+    }
+
+    function candidateFromBytes(bytes) {
+      let password = "";
+      for (let i = 0; i < bytes.length && password.length < 15; i++) {
+        const b = bytes[i];
+        if (b < ACCEPT_BELOW) password += ALPHABET[b % ALPHABET.length];
+      }
+      if (password.length < 15) return null;
+      if (!/[a-z]/.test(password)) return null;
+      if (!/[A-Z]/.test(password)) return null;
+      if (!/[0-9]/.test(password)) return null;
+      if (!/[-_%]/.test(password)) return null;
+      return password;
+    }
+
+    async function morphene(text, passphrase) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(passphrase),
+        "PBKDF2",
+        false,
+        ["deriveBits"]
+      );
+      const master = await crypto.subtle.deriveBits(
+        {
+          name: "PBKDF2",
+          salt: enc.encode("morphene.v2|" + text),
+          iterations: 150000,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        256
+      );
+      const hmacKey = await crypto.subtle.importKey(
+        "raw",
+        master,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+
+      for (let round = 0; round < 64; round++) {
+        const sig = new Uint8Array(
+          await crypto.subtle.sign("HMAC", hmacKey, enc.encode("morphene-round|" + round))
+        );
+        const password = candidateFromBytes(sig);
+        if (password) return password;
+      }
+      throw new Error("no candidate");
+    }
+  </script>
+</body>
+</html>
